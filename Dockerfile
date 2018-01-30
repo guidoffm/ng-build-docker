@@ -1,12 +1,23 @@
 FROM stefanscherer/node-windows:nanoserver as builder
 
-ARG HTTP_PROXY=""
-ARG HTTPS_PROXY=""
-ENV HTTP_PROXY=$HTTP_PROXY
-ENV HTTPS_PROXY=$HTTPS_PROXY
+RUN npm config set registry=http://prosim2064.bku.db.de:4873
+
+WORKDIR /app
+
+COPY package.json .
+
+RUN npm install
 
 COPY . .
 
-RUN npm i
+RUN ["C:\\nodejs\\node.exe", "node_modules\\@angular\\cli\\bin\\ng", "build", "-prod" , "--aot"]
 
-FROM stefanscherer/node-windows:nanoserver
+FROM microsoft/iis
+
+WORKDIR /inetpub/wwwroot
+
+RUN del /q *.*
+
+COPY --from=builder /app/dist .
+
+# ENTRYPOINT powershell
